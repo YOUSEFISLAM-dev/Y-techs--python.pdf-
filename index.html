@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced PDF Viewer & Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // Set workerSrc property of pdfjsLib to pdf.worker.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <h1><i class="fas fa-file-pdf"></i> PDF Master</h1>
+            </div>
+            <div class="toolbar">
+                <button id="open-pdf" class="btn"><i class="fas fa-folder-open"></i> Open PDF</button>
+                <input type="file" id="pdf-file" accept="application/pdf" hidden>
+                <button id="save-pdf" class="btn" disabled><i class="fas fa-save"></i> Save</button>
+                <button id="print-pdf" class="btn" disabled><i class="fas fa-print"></i> Print</button>
+                <div class="separator"></div>
+                <button id="prev-page" class="btn" disabled><i class="fas fa-arrow-left"></i></button>
+                <span id="page-info">Page <span id="current-page">0</span> / <span id="page-count">0</span></span>
+                <button id="next-page" class="btn" disabled><i class="fas fa-arrow-right"></i></button>
+                <div class="separator"></div>
+                <button id="zoom-out" class="btn" disabled><i class="fas fa-search-minus"></i></button>
+                <span id="zoom-level">100%</span>
+                <button id="zoom-in" class="btn" disabled><i class="fas fa-search-plus"></i></button>
+                <div class="separator"></div>
+                <button id="rotate-ccw" class="btn" disabled><i class="fas fa-undo"></i></button>
+                <button id="rotate-cw" class="btn" disabled><i class="fas fa-redo"></i></button>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Tools</h3>
+                </div>
+                <div class="tool-groups">
+                    <div class="tool-group">
+                        <h4>View</h4>
+                        <button id="fit-to-width" class="tool-btn"><i class="fas fa-arrows-alt-h"></i> Fit to Width</button>
+                        <button id="fit-to-page" class="tool-btn"><i class="fas fa-expand"></i> Fit to Page</button>
+                    </div>
+                    <div class="tool-group">
+                        <h4>Annotate</h4>
+                        <button id="text-tool" class="tool-btn"><i class="fas fa-font"></i> Add Text</button>
+                        <button id="highlight-tool" class="tool-btn"><i class="fas fa-highlighter"></i> Highlight</button>
+                        <button id="draw-tool" class="tool-btn"><i class="fas fa-pen"></i> Draw</button>
+                        <button id="shape-tool" class="tool-btn"><i class="fas fa-shapes"></i> Shapes</button>
+                    </div>
+                    <div class="tool-group">
+                        <h4>Modify</h4>
+                        <button id="crop-tool" class="tool-btn"><i class="fas fa-crop"></i> Crop</button>
+                        <button id="extract-tool" class="tool-btn"><i class="fas fa-cut"></i> Extract Pages</button>
+                        <button id="merge-tool" class="tool-btn"><i class="fas fa-object-group"></i> Merge PDFs</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="document-area">
+                <div id="pdf-container">
+                    <div class="empty-state">
+                        <i class="fas fa-file-pdf fa-5x"></i>
+                        <h2>No PDF Opened</h2>
+                        <p>Open a PDF file to view and edit it</p>
+                        <button id="open-pdf-empty" class="btn btn-primary"><i class="fas fa-folder-open"></i> Open PDF</button>
+                    </div>
+                    <canvas id="pdf-canvas"></canvas>
+                    <div id="text-layer"></div>
+                    <div id="annotation-layer"></div>
+                </div>
+            </div>
+            
+            <div class="properties-panel" id="properties-panel">
+                <div class="panel-header">
+                    <h3>Properties</h3>
+                    <button class="close-panel"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="panel-content">
+                    <div class="properties-form">
+                        <!-- Properties will be dynamically loaded based on selected tool/element -->
+                        <div class="empty-properties">
+                            <p>No element selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="thumbnails-bar" id="thumbnails-bar">
+            <div class="thumbnails-container" id="thumbnails-container">
+                <!-- Thumbnails will be added here -->
+            </div>
+        </div>
+        
+        <footer>
+            <div class="status-bar">
+                <span id="file-info">No file loaded</span>
+                <span id="zoom-info">Zoom: 100%</span>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Modal for advanced operations -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Modal Title</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Modal content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel" class="btn">Cancel</button>
+                <button id="modal-confirm" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Color picker component -->
+    <div class="color-picker" id="color-picker">
+        <div class="color-picker-header">
+            <h4>Color</h4>
+            <button class="close-color-picker"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="color-options">
+            <div class="color-preset" style="background-color: #ff0000;"></div>
+            <div class="color-preset" style="background-color: #00ff00;"></div>
+            <div class="color-preset" style="background-color: #0000ff;"></div>
+            <div class="color-preset" style="background-color: #ffff00;"></div>
+            <div class="color-preset" style="background-color: #00ffff;"></div>
+            <div class="color-preset" style="background-color: #ff00ff;"></div>
+            <div class="color-preset" style="background-color: #000000;"></div>
+            <div class="color-preset" style="background-color: #ffffff;"></div>
+        </div>
+        <div class="custom-color">
+            <input type="color" id="custom-color-input">
+            <label for="custom-color-input">Custom</label>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
